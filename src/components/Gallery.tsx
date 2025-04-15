@@ -26,7 +26,7 @@ const Gallery = () => {
       alt: "Wedding photograph"
     },
     {
-      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/420 copy.jpg?raw=true",
+      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/420copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
