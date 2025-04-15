@@ -3,43 +3,42 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Gallery = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
-
   // Gallery images using local files
   const galleryImages = [
     {
-      src: "./images/068copy.jpg",
+      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/068copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/0097copy.jpg",
+      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/0097copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/0098copy.jpg",
+      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/0098copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/136copy.jpg",
+      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/136copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/378copy.jpg",
+      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/378copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/420 copy.jpg",
+      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/420 copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/444copy.jpg",
+      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/444copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/426copy.jpg",
+      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/426copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/AdrianRyanIMG_5284.jpg",
+      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/AdrianRyanIMG_5284.jpg?raw=true",
       alt: "Wedding photograph"
     }
   ];
