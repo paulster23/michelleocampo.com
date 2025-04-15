@@ -28,7 +28,7 @@ jobs:
         run: npm run build
 
       - name: Deploy
-        uses: paulster23/michellocampo.com@v4 
+        uses: paulster23/michellocampo.com
         if: github. ref == 'refs/heads/main'
         with:
           github_token: ${ secrets.GITHUB_TOKEN }}
