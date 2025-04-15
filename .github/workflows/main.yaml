@@ -27,11 +27,8 @@ jobs:
       - name: Build Project 
         run: npm run build
 
-      - name: Build Project 
-        run: npm run build
-
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4 
+        uses: paulster23/michellocampo.com@v4 
         if: github. ref == 'refs/heads/main'
         with:
           github_token: ${ secrets.GITHUB_TOKEN }}
