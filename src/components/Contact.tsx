@@ -43,7 +43,7 @@ const Contact = () => {
                 <Mail className="h-5 w-5 mr-2 text-gray-400" />
                 <h3 className="text-lg font-light">Email</h3>
               </div>
-              <p className="text-gray-600">hello@michelleocampo.com</p>
+              <p className="text-gray-600"><a href="mailto:michelle@michelleocampo.com">michelle@michelleocampo.com</a></p>
             </div>
             
             <div className="mb-8">
