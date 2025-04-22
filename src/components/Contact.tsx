@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, MapPin, Calendar } from 'lucide-react';
 import emailjs from 'emailjs-com';
 
 const Contact = () => {
+  // EmailJS configuration
+  const serviceID = 'service_dizvkpg';
+  const templateID = 'template_lnbz257';
+  const userID = 'q2ycnHxxDT4dVYj-W';
+  
+  // Initialize EmailJS
+  useEffect(() => {
+    emailjs.init(userID);
+  }, [userID]);
+
+  // State for form data and messages
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -16,18 +27,28 @@ const Contact = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // State for success and error messages
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Clear messages after a timeout
+  useEffect(() => {
+    if (successMessage || errorMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage('');
+        setErrorMessage('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Replace with your EmailJS service ID, template ID, and user ID
-    const serviceID = 'service_dizvkpg';
-    const templateID = 'template_lnbz257';
-    const userID = 'q2ycnHxxDT4dVYj-W';
-
     emailjs
-      .send(serviceID, templateID, formData, userID)
+      .send(serviceID, templateID, formData)
       .then(() => {
-        alert('Thank you for your inquiry! I will get back to you soon.');
+        setSuccessMessage('Email sent successfully! Thank you for your inquiry. I will get back to you soon.');
         setFormData({
           name: '',
           email: '',
@@ -38,7 +59,7 @@ const Contact = () => {
       })
       .catch(error => {
         console.error('Error sending email:', error);
-        alert('There was an error sending your message. Please try again later.');
+        setErrorMessage('There was an error sending your message. Please try again later.');
       });
   };
 
@@ -71,6 +92,16 @@ const Contact = () => {
         </div>
         
         <div className="md:w-2/3 md:pl-8">
+          {successMessage && (
+            <div className="mb-4 p-3 bg-green-100 text-green-800 rounded">
+              {successMessage}
+            </div>
+          )}
+          {errorMessage && (
+            <div className="mb-4 p-3 bg-red-100 text-red-800 rounded">
+              {errorMessage}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="bg-white p-8 shadow-sm">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
