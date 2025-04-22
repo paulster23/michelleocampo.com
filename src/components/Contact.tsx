@@ -5,7 +5,7 @@ import emailjs from 'emailjs-com';
 const Contact = () => {
   // EmailJS configuration
   const serviceID = 'service_dizvkpg';
-  const templateID = 'template_lnbz257';
+  const templateID = 'templtemplate_rshedde';
   const userID = 'q2ycnHxxDT4dVYj-W';
   
   // Initialize EmailJS
