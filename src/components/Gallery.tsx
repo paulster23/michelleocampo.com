@@ -6,39 +6,39 @@ const Gallery = () => {
   // Gallery images using local files
   const galleryImages = [
     {
-      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/068copy.jpg?raw=true",
+      src: "./images/068copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/0097copy.jpg?raw=true",
+      src: "./images/0097copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/0098copy.jpg?raw=true",
+      src: "./images/0098copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/136copy.jpg?raw=true",
+      src: "./images/136copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/378copy.jpg?raw=true",
+      src: "./images/378copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/420copy.jpg?raw=true",
+      src: "./images/420copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/444copy.jpg?raw=true",
+      src: "./images/444copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/426copy.jpg?raw=true",
+      src: "./images/426copy.jpg?raw=true",
       alt: "Wedding photograph"
     },
     {
-      src: "https://github.com/paulster23/michelleocampo.com/blob/main/dist/images/AdrianRyanIMG_5284.jpg?raw=true",
+      src: "./images/AdrianRyanIMG_5284.jpg?raw=true",
       alt: "Wedding photograph"
     }
   ];
