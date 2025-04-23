@@ -6,39 +6,39 @@ const Gallery = () => {
   // Gallery images using local files
   const galleryImages = [
     {
-      src: "./images/068copy.jpg?raw=true",
+      src: "/images/068copy.jpg",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/0097copy.jpg?raw=true",
+      src: "/images/0097copy.jpg",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/0098copy.jpg?raw=true",
+      src: "/images/0098copy.jpg",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/136copy.jpg?raw=true",
+      src: "/images/136copy.jpg",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/378copy.jpg?raw=true",
+      src: "/images/378copy.jpg",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/420copy.jpg?raw=true",
+      src: "/images/420copy.jpg",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/444copy.jpg?raw=true",
+      src: "/images/444copy.jpg",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/426copy.jpg?raw=true",
+      src: "/images/426copy.jpg",
       alt: "Wedding photograph"
     },
     {
-      src: "./images/AdrianRyanIMG_5284.jpg?raw=true",
+      src: "/images/AdrianRyanIMG_5284.jpg",
       alt: "Wedding photograph"
     }
   ];
