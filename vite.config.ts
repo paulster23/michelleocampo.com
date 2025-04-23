@@ -7,5 +7,6 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
-  base: './' // This ensures assets are loaded correctly on GitHub Pages
+  // Using '/' for Netlify deployment instead of './' which is for GitHub Pages
+  base: '/'
 });
