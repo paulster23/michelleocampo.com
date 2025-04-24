@@ -3,8 +3,10 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Gallery = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
-  // Gallery images using local files
-  const galleryImages = [
+  const [activeTab, setActiveTab] = useState<'weddings' | 'events'>('weddings');
+  
+  // Wedding gallery images
+  const weddingImages = [
     {
       src: "/images/068copy.jpg",
       alt: "Wedding photograph"
@@ -42,15 +44,58 @@ const Gallery = () => {
       alt: "Wedding photograph"
     }
   ];
+  
+  // Event gallery images
+  const eventImages = [
+    {
+      src: "/images/068copy.jpg",
+      alt: "Event photograph"
+    },
+    {
+      src: "/images/0097copy.jpg",
+      alt: "Event photograph"
+    },
+    {
+      src: "/images/0098copy.jpg",
+      alt: "Event photograph"
+    },
+    {
+      src: "/images/136copy.jpg",
+      alt: "Event photograph"
+    },
+    {
+      src: "/images/378copy.jpg",
+      alt: "Event photograph"
+    },
+    {
+      src: "/images/420copy.jpg",
+      alt: "Event photograph"
+    },
+    {
+      src: "/images/444copy.jpg",
+      alt: "Event photograph"
+    },
+    {
+      src: "/images/426copy.jpg",
+      alt: "Event photograph"
+    },
+    {
+      src: "/images/AdrianRyanIMG_5284.jpg",
+      alt: "Event photograph"
+    }
+  ];
+  
+  // Get current images based on active tab
+  const currentImages = activeTab === 'weddings' ? weddingImages : eventImages;
 
   const handlePrevImage = () => {
     if (selectedImageIndex === null) return;
-    setSelectedImageIndex((selectedImageIndex - 1 + galleryImages.length) % galleryImages.length);
+    setSelectedImageIndex((selectedImageIndex - 1 + currentImages.length) % currentImages.length);
   };
 
   const handleNextImage = () => {
     if (selectedImageIndex === null) return;
-    setSelectedImageIndex((selectedImageIndex + 1) % galleryImages.length);
+    setSelectedImageIndex((selectedImageIndex + 1) % currentImages.length);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -66,14 +111,42 @@ const Gallery = () => {
   return (
     <section id="gallery" className="py-20 bg-gray-50">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h2 className="text-3xl font-light mb-4">Portfolio</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">A glimpse into the beautiful moments I've had the privilege to capture.</p>
         </div>
         
+        {/* Gallery Tabs */}
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex space-x-8" role="group">
+            <button
+              type="button"
+              className={`px-2 py-1 text-sm ${
+                activeTab === 'weddings'
+                  ? 'font-bold border-b-2 border-gray-800'
+                  : 'font-medium text-gray-600 hover:text-gray-800'
+              } focus:outline-none transition-colors`}
+              onClick={() => setActiveTab('weddings')}
+            >
+              Weddings
+            </button>
+            <button
+              type="button"
+              className={`px-2 py-1 text-sm ${
+                activeTab === 'events'
+                  ? 'font-bold border-b-2 border-gray-800'
+                  : 'font-medium text-gray-600 hover:text-gray-800'
+              } focus:outline-none transition-colors`}
+              onClick={() => setActiveTab('events')}
+            >
+              Events
+            </button>
+          </div>
+        </div>
+        
         {/* Gallery Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {galleryImages.map((image, index) => (
+          {currentImages.map((image, index) => (
             <div 
               key={index} 
               className="aspect-square overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
@@ -121,14 +194,14 @@ const Gallery = () => {
           </button>
           
           <img 
-            src={galleryImages[selectedImageIndex].src} 
-            alt={galleryImages[selectedImageIndex].alt} 
+            src={currentImages[selectedImageIndex].src} 
+            alt={currentImages[selectedImageIndex].alt} 
             className="max-h-[90vh] max-w-[90vw] object-contain"
           />
           
           {/* Image counter */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white bg-black/50 px-4 py-2 rounded-full text-sm">
-            {selectedImageIndex + 1} / {galleryImages.length}
+            {selectedImageIndex + 1} / {currentImages.length}
           </div>
         </div>
       )}
