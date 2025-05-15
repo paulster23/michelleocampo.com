@@ -7,7 +7,7 @@ const Gallery = () => {
     {
       src: "/images/068copy.jpg",
       alt: "Elegant wedding ceremony at sunset with bride and groom exchanging vows",
-      title: "Sunset Wedding Ceremony"
+      title: "Wedding Ceremony"
     },
     {
       src: "/images/0097copy.jpg",
@@ -17,27 +17,27 @@ const Gallery = () => {
     {
       src: "/images/0098copy.jpg",
       alt: "Candid celebration moment with wedding party",
-      title: "Wedding Party Celebration"
+      title: "Wedding Party"
     },
     {
       src: "/images/136copy.jpg",
       alt: "Romantic portrait of bride and groom in Brooklyn Bridge Park",
-      title: "Brooklyn Bridge Portrait"
+      title: "Couple Portrait"
     },
     {
       src: "/images/378copy.jpg",
       alt: "Emotional father-daughter dance at reception",
-      title: "Father Daughter Dance"
+      title: "Reception"
     },
     {
       src: "/images/420copy.jpg",
       alt: "Detail shot of wedding rings and flowers",
-      title: "Wedding Details"
+      title: "Details"
     },
     {
       src: "/images/444copy.jpg",
       alt: "Bride getting ready with her bridesmaids",
-      title: "Bridal Preparation"
+      title: "Getting Ready"
     },
     {
       src: "/images/426copy.jpg",
@@ -75,8 +75,8 @@ const Gallery = () => {
     <section id="gallery" className="py-20 bg-gray-50">
       <div className="container mx-auto px-4 md:px-6">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-light mb-4">Wedding Photography Portfolio</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">Elegant and authentic wedding photography capturing precious moments across New York City and worldwide.</p>
+          <h2 className="text-3xl font-light mb-4">Portfolio</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">Wedding photography portfolio</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

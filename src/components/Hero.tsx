@@ -19,7 +19,7 @@ const Hero = () => {
           <span className="block text-3xl md:text-4xl mt-2">Michelle Ocampo Photography</span>
         </h1>
         <p className="text-xl mb-8 max-w-2xl">
-          Capturing authentic moments and creating timeless memories across New York City and beyond
+          Capturing authentic moments and creating timeless memories
         </p>
         <a
           href="#contact"
