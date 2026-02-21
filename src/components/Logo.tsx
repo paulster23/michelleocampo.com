@@ -1,44 +1,26 @@
 import React from 'react';
 
-const Logo: React.FC = () => {
+interface LogoProps {
+  width?: number;
+  height?: number;
+  color?: string;
+}
+
+const Logo: React.FC<LogoProps> = ({ width = 40, height = 40, color = 'currentColor' }) => {
   return (
     <svg
-      width="36"
-      height="36"
-      viewBox="0 0 36 36"
+      viewBox="0 0 40 40"
+      width={width}
+      height={height}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="text-current"
     >
-      {/* Simple M monogram */}
       <path
-        d="M10 10L18 18L26 10"
-        stroke="currentColor"
-        strokeWidth="2"
+        d="M6 32V8L20 24L34 8V32"
+        stroke={color}
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
-      />
-      <path
-        d="M10 10V26"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M26 10V26"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      
-      {/* Thin circular border */}
-      <circle
-        cx="18"
-        cy="18"
-        r="14"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
       />
     </svg>
   );

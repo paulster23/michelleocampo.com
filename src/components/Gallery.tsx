@@ -109,11 +109,11 @@ const Gallery = () => {
   };
 
   return (
-    <section id="gallery" className="py-20 bg-gray-50">
+    <section id="gallery" className="py-20 bg-warm-white">
       <div className="container mx-auto px-4 md:px-6">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-light mb-4">Portfolio</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">A glimpse into the beautiful moments I've had the privilege to capture.</p>
+          <p className="text-warm-gray max-w-2xl mx-auto">A glimpse into the beautiful moments I've had the privilege to capture.</p>
         </div>
         
         {/* Gallery Tabs */}
@@ -123,8 +123,8 @@ const Gallery = () => {
               type="button"
               className={`px-2 py-1 text-sm ${
                 activeTab === 'weddings'
-                  ? 'font-bold border-b-2 border-gray-800'
-                  : 'font-medium text-gray-600 hover:text-gray-800'
+                  ? 'font-bold border-b-2 border-primary text-charcoal'
+                  : 'font-medium text-warm-gray hover:text-charcoal'
               } focus:outline-none transition-colors`}
               onClick={() => setActiveTab('weddings')}
             >
@@ -134,8 +134,8 @@ const Gallery = () => {
               type="button"
               className={`px-2 py-1 text-sm ${
                 activeTab === 'events'
-                  ? 'font-bold border-b-2 border-gray-800'
-                  : 'font-medium text-gray-600 hover:text-gray-800'
+                  ? 'font-bold border-b-2 border-primary text-charcoal'
+                  : 'font-medium text-warm-gray hover:text-charcoal'
               } focus:outline-none transition-colors`}
               onClick={() => setActiveTab('events')}
             >
@@ -145,18 +145,19 @@ const Gallery = () => {
         </div>
         
         {/* Gallery Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="gallery-grid">
           {currentImages.map((image, index) => (
-            <div 
-              key={index} 
-              className="aspect-square overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+            <div
+              key={index}
+              className={`group relative overflow-hidden cursor-pointer ${index === 0 || index === 5 ? 'featured' : ''}`}
               onClick={() => setSelectedImageIndex(index)}
             >
-              <img 
-                src={image.src} 
-                alt={image.alt} 
+              <img
+                src={image.src}
+                alt={image.alt}
                 className="w-full h-full object-cover"
               />
+              <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/20 transition-all duration-300" />
             </div>
           ))}
         </div>
@@ -169,24 +170,24 @@ const Gallery = () => {
           tabIndex={0}
           onKeyDown={handleKeyDown}
         >
-          <button 
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
+          <button
+            className="absolute top-4 right-4 text-cream hover:text-gold transition-colors"
             onClick={() => setSelectedImageIndex(null)}
           >
             <X className="h-8 w-8" />
           </button>
-          
+
           {/* Navigation buttons */}
-          <button 
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 p-2 rounded-full text-white hover:bg-black/70 transition-colors"
+          <button
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-primary/80 p-2 rounded-full text-cream hover:bg-primary transition-colors"
             onClick={handlePrevImage}
             aria-label="Previous image"
           >
             <ChevronLeft className="h-8 w-8" />
           </button>
-          
-          <button 
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 p-2 rounded-full text-white hover:bg-black/70 transition-colors"
+
+          <button
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-primary/80 p-2 rounded-full text-cream hover:bg-primary transition-colors"
             onClick={handleNextImage}
             aria-label="Next image"
           >
