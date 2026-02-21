@@ -36,9 +36,10 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Navigation Toggle */}
-          <button 
+          <button
             className={`md:hidden ${isScrolled ? 'text-gray-900' : 'text-white'}`}
             onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
           >
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>

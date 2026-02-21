@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Gallery = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'weddings' | 'events'>('weddings');
+  const lightboxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedImageIndex !== null) {
+      lightboxRef.current?.focus();
+    }
+  }, [selectedImageIndex]);
   
   // Wedding gallery images
   const weddingImages = [
@@ -165,7 +172,8 @@ const Gallery = () => {
 
       {/* Lightbox */}
       {selectedImageIndex !== null && (
-        <div 
+        <div
+          ref={lightboxRef}
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           tabIndex={0}
           onKeyDown={handleKeyDown}
@@ -173,6 +181,7 @@ const Gallery = () => {
           <button
             className="absolute top-4 right-4 text-cream hover:text-gold transition-colors"
             onClick={() => setSelectedImageIndex(null)}
+            aria-label="Close image viewer"
           >
             <X className="h-8 w-8" />
           </button>

@@ -11,7 +11,7 @@ const Hero = () => {
             "url('/images/444copy.jpg')",
         }}
       ></div>
-      <div className="relative h-full flex items-end justify-start px-12 pb-20 z-20">
+      <div className="relative h-full flex items-end justify-start px-6 pb-12 md:px-12 md:pb-20 z-20">
         <div className="flex flex-col items-start">
           <hr className="w-12 border-gold mb-6" />
           <h1 className="text-5xl md:text-7xl font-heading font-light text-cream tracking-tighter mb-8">

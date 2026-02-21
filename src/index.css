@@ -7,7 +7,7 @@
   --color-warm-white: #F5F3F0;
   --color-warm-gray:  #5C5C5C;
   --color-charcoal:   #1C1C1C;
-  --color-primary:    #5C2E2E;
+  --color-primary:    #2C3E50;
   --color-gold:       #C49A6C;
   --font-heading: 'avano-contrast', sans-serif;
   --font-body:    'avano-contrast', sans-serif;
@@ -42,4 +42,15 @@ html {
 .gallery-grid .featured {
   grid-column: span 2;
   grid-row: span 2;
+}
+
+@media (max-width: 767px) {
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 200px;
+  }
+  .gallery-grid .featured {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
 }
