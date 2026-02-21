@@ -3,9 +3,6 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Gallery = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
-<<<<<<< HEAD
-  const galleryImages = [
-=======
   const [activeTab, setActiveTab] = useState<'weddings' | 'events'>('weddings');
   const lightboxRef = useRef<HTMLDivElement>(null);
 
@@ -14,98 +11,60 @@ const Gallery = () => {
       lightboxRef.current?.focus();
     }
   }, [selectedImageIndex]);
-  
+
   // Wedding gallery images
   const weddingImages = [
->>>>>>> add-gallery
     {
       src: "/images/068copy.jpg",
       alt: "Elegant wedding ceremony at sunset with bride and groom exchanging vows",
-      title: "Wedding Ceremony"
     },
     {
       src: "/images/0097copy.jpg",
       alt: "Intimate moment between newlyweds during their first dance",
-      title: "First Dance"
     },
     {
       src: "/images/0098copy.jpg",
       alt: "Candid celebration moment with wedding party",
-      title: "Wedding Party"
     },
     {
       src: "/images/136copy.jpg",
       alt: "Romantic portrait of bride and groom in Brooklyn Bridge Park",
-      title: "Couple Portrait"
     },
     {
       src: "/images/378copy.jpg",
       alt: "Emotional father-daughter dance at reception",
-      title: "Reception"
     },
     {
       src: "/images/420copy.jpg",
       alt: "Detail shot of wedding rings and flowers",
-      title: "Details"
     },
     {
       src: "/images/444copy.jpg",
       alt: "Bride getting ready with her bridesmaids",
-      title: "Getting Ready"
     },
     {
       src: "/images/426copy.jpg",
       alt: "Couple's first look moment in Central Park",
-      title: "First Look"
     },
     {
       src: "/images/AdrianRyanIMG_5284.jpg",
       alt: "Romantic sunset portrait of newlyweds",
-      title: "Sunset Portrait"
     }
   ];
-  
+
   // Event gallery images
   const eventImages = [
-    {
-      src: "/images/068copy.jpg",
-      alt: "Event photograph"
-    },
-    {
-      src: "/images/0097copy.jpg",
-      alt: "Event photograph"
-    },
-    {
-      src: "/images/0098copy.jpg",
-      alt: "Event photograph"
-    },
-    {
-      src: "/images/136copy.jpg",
-      alt: "Event photograph"
-    },
-    {
-      src: "/images/378copy.jpg",
-      alt: "Event photograph"
-    },
-    {
-      src: "/images/420copy.jpg",
-      alt: "Event photograph"
-    },
-    {
-      src: "/images/444copy.jpg",
-      alt: "Event photograph"
-    },
-    {
-      src: "/images/426copy.jpg",
-      alt: "Event photograph"
-    },
-    {
-      src: "/images/AdrianRyanIMG_5284.jpg",
-      alt: "Event photograph"
-    }
+    { src: "/images/068copy.jpg",             alt: "Event photograph" },
+    { src: "/images/0097copy.jpg",            alt: "Event photograph" },
+    { src: "/images/0098copy.jpg",            alt: "Event photograph" },
+    { src: "/images/136copy.jpg",             alt: "Event photograph" },
+    { src: "/images/378copy.jpg",             alt: "Event photograph" },
+    { src: "/images/420copy.jpg",             alt: "Event photograph" },
+    { src: "/images/444copy.jpg",             alt: "Event photograph" },
+    { src: "/images/426copy.jpg",             alt: "Event photograph" },
+    { src: "/images/AdrianRyanIMG_5284.jpg",  alt: "Event photograph" },
   ];
-  
-  // Get current images based on active tab
+
   const currentImages = activeTab === 'weddings' ? weddingImages : eventImages;
 
   const handlePrevImage = () => {
@@ -133,25 +92,9 @@ const Gallery = () => {
       <div className="container mx-auto px-4 md:px-6">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-light mb-4">Portfolio</h2>
-<<<<<<< HEAD
-          <p className="text-gray-600 max-w-2xl mx-auto">Wedding photography portfolio</p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {galleryImages.map((image, index) => (
-            <figure 
-              key={index} 
-              className="aspect-square overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={() => setSelectedImageIndex(index)}
-            >
-              <img 
-                src={image.src} 
-                alt={image.alt}
-                title={image.title}
-=======
           <p className="text-warm-gray max-w-2xl mx-auto">A glimpse into the beautiful moments I've had the privilege to capture.</p>
         </div>
-        
+
         {/* Gallery Tabs */}
         <div className="flex justify-center mb-8">
           <div className="inline-flex space-x-8" role="group">
@@ -179,7 +122,7 @@ const Gallery = () => {
             </button>
           </div>
         </div>
-        
+
         {/* Gallery Grid */}
         <div className="gallery-grid">
           {currentImages.map((image, index) => (
@@ -191,21 +134,16 @@ const Gallery = () => {
               <img
                 src={image.src}
                 alt={image.alt}
->>>>>>> add-gallery
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
-<<<<<<< HEAD
-              <figcaption className="sr-only">{image.alt}</figcaption>
-            </figure>
-=======
               <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/20 transition-all duration-300" />
             </div>
->>>>>>> add-gallery
           ))}
         </div>
       </div>
 
+      {/* Lightbox */}
       {selectedImageIndex !== null && (
         <div
           ref={lightboxRef}
@@ -218,24 +156,13 @@ const Gallery = () => {
           <button
             className="absolute top-4 right-4 text-cream hover:text-gold transition-colors"
             onClick={() => setSelectedImageIndex(null)}
-<<<<<<< HEAD
-            aria-label="Close lightbox"
-          >
-            <X className="h-8 w-8" />
-          </button>
-          
-          <button 
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 p-2 rounded-full text-white hover:bg-black/70 transition-colors"
-=======
             aria-label="Close image viewer"
           >
             <X className="h-8 w-8" />
           </button>
 
-          {/* Navigation buttons */}
           <button
             className="absolute left-4 top-1/2 -translate-y-1/2 bg-primary/80 p-2 rounded-full text-cream hover:bg-primary transition-colors"
->>>>>>> add-gallery
             onClick={handlePrevImage}
             aria-label="Previous image"
           >
@@ -249,30 +176,17 @@ const Gallery = () => {
           >
             <ChevronRight className="h-8 w-8" />
           </button>
-          
-<<<<<<< HEAD
-          <figure>
-            <img 
-              src={galleryImages[selectedImageIndex].src} 
-              alt={galleryImages[selectedImageIndex].alt} 
-              className="max-h-[90vh] max-w-[90vw] object-contain"
-            />
-            <figcaption className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white bg-black/50 px-4 py-2 rounded-full text-sm">
-              {selectedImageIndex + 1} / {galleryImages.length}
-            </figcaption>
-          </figure>
-=======
-          <img 
-            src={currentImages[selectedImageIndex].src} 
-            alt={currentImages[selectedImageIndex].alt} 
+
+          <img
+            src={currentImages[selectedImageIndex].src}
+            alt={currentImages[selectedImageIndex].alt}
             className="max-h-[90vh] max-w-[90vw] object-contain"
           />
-          
+
           {/* Image counter */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white bg-black/50 px-4 py-2 rounded-full text-sm">
             {selectedImageIndex + 1} / {currentImages.length}
           </div>
->>>>>>> add-gallery
         </div>
       )}
     </section>
