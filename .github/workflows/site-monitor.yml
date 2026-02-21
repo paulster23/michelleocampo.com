@@ -1,0 +1,391 @@
+name: Site Monitor
+
+on:
+  schedule:
+    # Runs every 6 hours at minute 0
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+env:
+  SITE_URL: https://michelleocampo.com
+  EMAILJS_URL: https://api.emailjs.com/api/v1.0/email/send
+  SSL_WARN_DAYS: 14
+  SSL_FAIL_DAYS: 3
+  LABEL_NAME: monitoring
+
+jobs:
+  monitor:
+    name: Run health checks
+    runs-on: ubuntu-latest
+
+    steps:
+      # -----------------------------------------------------------------------
+      # Ensure the "monitoring" label exists in this repo
+      # -----------------------------------------------------------------------
+      - name: Ensure monitoring label exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create "$LABEL_NAME" \
+            --description "Automated monitoring alerts" \
+            --color "d93f0b" \
+            --repo "${{ github.repository }}" 2>/dev/null || true
+
+      # -----------------------------------------------------------------------
+      # CHECK 1 — HTTP status
+      # -----------------------------------------------------------------------
+      - name: Check HTTP status
+        id: http
+        run: |
+          HTTP_CODE=$(curl -sSo /dev/null -w "%{http_code}" \
+            --max-time 15 \
+            --retry 2 \
+            --retry-delay 5 \
+            "$SITE_URL" || echo "000")
+          echo "http_code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "status=ok" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+          fi
+
+      # -----------------------------------------------------------------------
+      # CHECK 2 — SSL certificate expiry
+      # -----------------------------------------------------------------------
+      - name: Check SSL certificate
+        id: ssl
+        run: |
+          HOSTNAME=$(echo "$SITE_URL" | sed 's|https://||' | sed 's|/.*||')
+
+          # Fetch the certificate's notAfter field
+          NOT_AFTER=$(echo "" \
+            | timeout 15 openssl s_client \
+                -connect "${HOSTNAME}:443" \
+                -servername "$HOSTNAME" \
+                2>/dev/null \
+            | openssl x509 -noout -enddate 2>/dev/null \
+            | cut -d= -f2)
+
+          if [ -z "$NOT_AFTER" ]; then
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+            echo "days_remaining=-1" >> "$GITHUB_OUTPUT"
+            echo "expiry_date=unknown" >> "$GITHUB_OUTPUT"
+            echo "error=Could not retrieve SSL certificate" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Convert notAfter to epoch seconds (openssl returns dates like "Apr  1 12:00:00 2026 GMT")
+          EXPIRY_EPOCH=$(date -d "$NOT_AFTER" +%s 2>/dev/null || date -j -f "%b %d %T %Y %Z" "$NOT_AFTER" +%s 2>/dev/null)
+          NOW_EPOCH=$(date +%s)
+          DAYS_REMAINING=$(( (EXPIRY_EPOCH - NOW_EPOCH) / 86400 ))
+
+          echo "days_remaining=$DAYS_REMAINING" >> "$GITHUB_OUTPUT"
+          echo "expiry_date=$NOT_AFTER" >> "$GITHUB_OUTPUT"
+
+          if [ "$DAYS_REMAINING" -lt "$SSL_FAIL_DAYS" ]; then
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+          elif [ "$DAYS_REMAINING" -lt "$SSL_WARN_DAYS" ]; then
+            echo "status=warn" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=ok" >> "$GITHUB_OUTPUT"
+          fi
+
+      # -----------------------------------------------------------------------
+      # CHECK 3 — EmailJS API reachability
+      # -----------------------------------------------------------------------
+      - name: Check EmailJS reachability
+        id: emailjs
+        run: |
+          # A HEAD request to the send endpoint: any HTTP response (even 4xx)
+          # means the service is up. A network failure (curl exit code != 0
+          # or HTTP 000) means it is unreachable.
+          EMAILJS_CODE=$(curl -sSo /dev/null -w "%{http_code}" \
+            --max-time 15 \
+            --retry 2 \
+            --retry-delay 5 \
+            -X HEAD \
+            "$EMAILJS_URL" || echo "000")
+          echo "http_code=$EMAILJS_CODE" >> "$GITHUB_OUTPUT"
+          if [ "$EMAILJS_CODE" = "000" ]; then
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=ok" >> "$GITHUB_OUTPUT"
+          fi
+
+      # -----------------------------------------------------------------------
+      # ISSUE MANAGEMENT — helper: find open monitoring issue by title prefix
+      # -----------------------------------------------------------------------
+
+      # CHECK 1 result handling
+      - name: Handle HTTP check result
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HTTP_STATUS: ${{ steps.http.outputs.status }}
+          HTTP_CODE: ${{ steps.http.outputs.http_code }}
+        run: |
+          TITLE_PREFIX="[Monitor] Site down"
+
+          # Find any open issue whose title starts with this prefix
+          OPEN_ISSUE=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --label "$LABEL_NAME" \
+            --state open \
+            --json number,title \
+            --jq ".[] | select(.title | startswith(\"$TITLE_PREFIX\")) | .number" \
+            | head -1)
+
+          if [ "$HTTP_STATUS" = "fail" ]; then
+            TITLE="$TITLE_PREFIX — HTTP $HTTP_CODE"
+
+            # Don't open a duplicate if an issue is already open
+            if [ -n "$OPEN_ISSUE" ]; then
+              echo "HTTP issue #$OPEN_ISSUE already open — skipping duplicate"
+              exit 0
+            fi
+
+            BODY=$(cat <<EOF
+          ## Site is not responding correctly
+
+          | Detail | Value |
+          |--------|-------|
+          | **URL checked** | $SITE_URL |
+          | **HTTP status returned** | \`$HTTP_CODE\` |
+          | **Expected status** | \`200\` |
+          | **Checked at** | $(date -u '+%Y-%m-%d %H:%M UTC') |
+
+          ## What this means
+
+          The site returned HTTP \`$HTTP_CODE\` instead of the expected \`200 OK\`.
+          Common causes:
+          - **000** — Network failure: DNS resolution failed, or the server did not respond at all.
+          - **503 / 502** — Netlify is serving an error page; the deploy may have failed or the site may be over bandwidth limits.
+          - **404** — The publish directory or index file was not found in the last deploy.
+          - **301 / 302** (unexpected redirect) — A redirect loop or mis-configured redirect rule.
+
+          ## Troubleshooting checklist
+
+          - [ ] Open the [Netlify dashboard](https://app.netlify.com) and check the **Deploys** tab for errors on the most recent deploy.
+          - [ ] Check the **Functions** log if the site uses any Netlify Functions.
+          - [ ] Visit $SITE_URL in a browser and note the exact error shown.
+          - [ ] Run \`dig michelleocampo.com\` or use [dnschecker.org](https://dnschecker.org/#A/michelleocampo.com) to confirm DNS is resolving to Netlify's IP range (\`75.2.x.x\` or \`99.83.x.x\`).
+          - [ ] Check [Netlify status](https://www.netlifystatus.com) for any active incidents.
+          - [ ] If a recent commit broke the build, revert it or push a fix to the \`main\` branch — Netlify will redeploy automatically.
+
+          ---
+          *This issue was opened automatically by the [Site Monitor workflow](https://github.com/${{ github.repository }}/actions/workflows/site-monitor.yml).*
+          EOF
+          )
+
+            gh issue create \
+              --repo "${{ github.repository }}" \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --label "$LABEL_NAME"
+
+          else
+            # Check passed — close any open issue for this check
+            if [ -n "$OPEN_ISSUE" ]; then
+              gh issue comment "$OPEN_ISSUE" \
+                --repo "${{ github.repository }}" \
+                --body "The site is responding normally again (HTTP 200 as of $(date -u '+%Y-%m-%d %H:%M UTC')). Closing this issue automatically."
+              gh issue close "$OPEN_ISSUE" \
+                --repo "${{ github.repository }}"
+              echo "Closed HTTP issue #$OPEN_ISSUE"
+            else
+              echo "HTTP check passed — no open issue to close"
+            fi
+          fi
+
+      - name: Handle SSL check result
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SSL_STATUS: ${{ steps.ssl.outputs.status }}
+          DAYS_REMAINING: ${{ steps.ssl.outputs.days_remaining }}
+          EXPIRY_DATE: ${{ steps.ssl.outputs.expiry_date }}
+        run: |
+          TITLE_PREFIX="[Monitor] SSL cert"
+
+          OPEN_ISSUE=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --label "$LABEL_NAME" \
+            --state open \
+            --json number,title \
+            --jq ".[] | select(.title | startswith(\"$TITLE_PREFIX\")) | .number" \
+            | head -1)
+
+          if [ "$SSL_STATUS" = "fail" ] || [ "$SSL_STATUS" = "warn" ]; then
+
+            if [ "$DAYS_REMAINING" = "-1" ]; then
+              TITLE="$TITLE_PREFIX — could not be retrieved"
+              SUMMARY="The monitor could not connect to the site over TLS or could not parse the certificate. This may indicate the certificate has already expired or that TLS is misconfigured."
+              URGENCY="**This is a critical error.** Visitors will see a browser security warning and the site will be effectively inaccessible."
+            elif [ "$DAYS_REMAINING" -lt "$SSL_FAIL_DAYS" ]; then
+              TITLE="$TITLE_PREFIX expires in $DAYS_REMAINING day(s) — CRITICAL"
+              SUMMARY="The SSL certificate expires in **$DAYS_REMAINING day(s)** on \`$EXPIRY_DATE\`. Auto-renewal has likely failed."
+              URGENCY="**This is a critical error.** Visitors are already seeing or will imminently see a browser security warning."
+            else
+              TITLE="$TITLE_PREFIX expires in $DAYS_REMAINING days — renew soon"
+              SUMMARY="The SSL certificate expires in **$DAYS_REMAINING days** on \`$EXPIRY_DATE\`. Netlify's automatic renewal should handle this, but it has not renewed yet."
+              URGENCY="**Action recommended within the next few days** to avoid downtime."
+            fi
+
+            if [ -n "$OPEN_ISSUE" ]; then
+              echo "SSL issue #$OPEN_ISSUE already open — skipping duplicate"
+              exit 0
+            fi
+
+            BODY=$(cat <<EOF
+          ## SSL certificate expiry warning
+
+          | Detail | Value |
+          |--------|-------|
+          | **Domain** | michelleocampo.com |
+          | **Certificate expires** | \`$EXPIRY_DATE\` |
+          | **Days remaining** | $DAYS_REMAINING |
+          | **Checked at** | $(date -u '+%Y-%m-%d %H:%M UTC') |
+
+          $SUMMARY
+
+          $URGENCY
+
+          ## How to renew the certificate on Netlify
+
+          1. Log in to the [Netlify dashboard](https://app.netlify.com).
+          2. Select the **michelleocampo.com** site.
+          3. Go to **Site configuration → Domain management → HTTPS**.
+          4. Click **"Renew certificate"** (the button appears when renewal is possible or overdue).
+          5. Wait 1–2 minutes and reload the page to confirm the new expiry date is shown.
+
+          If the "Renew certificate" button is greyed out or renewal fails:
+          - Confirm that the DNS A/CNAME records for \`michelleocampo.com\` and \`www.michelleocampo.com\` still point to Netlify (check [dnschecker.org](https://dnschecker.org)).
+          - Check [Netlify status](https://www.netlifystatus.com) for any active certificate provisioning incidents.
+          - If DNS recently changed, wait up to 48 hours for propagation before retrying.
+          - As a last resort, contact Netlify support from the dashboard.
+
+          ## Why does this happen?
+
+          Let's Encrypt certificates expire every 90 days. Netlify normally auto-renews them, but renewal can fail if:
+          - DNS records changed and no longer point to Netlify.
+          - A Netlify service disruption interrupted the ACME challenge.
+          - The domain was briefly transferred or pointed elsewhere.
+
+          ---
+          *This issue was opened automatically by the [Site Monitor workflow](https://github.com/${{ github.repository }}/actions/workflows/site-monitor.yml).*
+          EOF
+          )
+
+            gh issue create \
+              --repo "${{ github.repository }}" \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --label "$LABEL_NAME"
+
+          else
+            if [ -n "$OPEN_ISSUE" ]; then
+              gh issue comment "$OPEN_ISSUE" \
+                --repo "${{ github.repository }}" \
+                --body "SSL certificate is healthy again ($DAYS_REMAINING days remaining, expires \`$EXPIRY_DATE\`). Checked at $(date -u '+%Y-%m-%d %H:%M UTC'). Closing this issue automatically."
+              gh issue close "$OPEN_ISSUE" \
+                --repo "${{ github.repository }}"
+              echo "Closed SSL issue #$OPEN_ISSUE"
+            else
+              echo "SSL check passed ($DAYS_REMAINING days remaining) — no open issue to close"
+            fi
+          fi
+
+      - name: Handle EmailJS check result
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EMAILJS_STATUS: ${{ steps.emailjs.outputs.status }}
+          EMAILJS_CODE: ${{ steps.emailjs.outputs.http_code }}
+        run: |
+          TITLE_PREFIX="[Monitor] EmailJS unreachable"
+
+          OPEN_ISSUE=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --label "$LABEL_NAME" \
+            --state open \
+            --json number,title \
+            --jq ".[] | select(.title | startswith(\"$TITLE_PREFIX\")) | .number" \
+            | head -1)
+
+          if [ "$EMAILJS_STATUS" = "fail" ]; then
+            TITLE="$TITLE_PREFIX — no response from api.emailjs.com"
+
+            if [ -n "$OPEN_ISSUE" ]; then
+              echo "EmailJS issue #$OPEN_ISSUE already open — skipping duplicate"
+              exit 0
+            fi
+
+            BODY=$(cat <<EOF
+          ## EmailJS API is not reachable
+
+          | Detail | Value |
+          |--------|-------|
+          | **Endpoint checked** | \`$EMAILJS_URL\` |
+          | **HTTP status returned** | \`$EMAILJS_CODE\` (\`000\` = no response / network error) |
+          | **Checked at** | $(date -u '+%Y-%m-%d %H:%M UTC') |
+
+          ## What this means
+
+          The monitor could not reach the EmailJS API endpoint at all. This means the contact form on the site **will not be able to send emails** until this is resolved.
+
+          Note: this check only verifies that the EmailJS service is reachable over the network. It does **not** verify that your specific service ID or template ID is correctly configured — those would produce a 4xx HTTP error, which would count as "reachable".
+
+          ## Troubleshooting checklist
+
+          - [ ] Visit [emailjs.com](https://www.emailjs.com) and attempt to log in — if the site is down, this is a service outage.
+          - [ ] Check the EmailJS status page or their [Twitter/X account](https://twitter.com/emailjs) for any announced incidents.
+          - [ ] Try \`curl -I https://api.emailjs.com/api/v1.0/email/send\` from your local machine to confirm whether the issue is network-wide or isolated to GitHub Actions.
+          - [ ] If EmailJS is up but the contact form stopped working separately, verify the credentials in the site source:
+            - Service ID: \`service_dizvkpg\`
+            - Template ID: \`template_zbmk72p\`
+            - These can be confirmed under **Email Services** and **Email Templates** in the [EmailJS dashboard](https://dashboard.emailjs.com).
+          - [ ] Check that your EmailJS account has not exceeded its free-tier monthly email limit (200 emails/month on the free plan).
+
+          ## If this is a persistent EmailJS outage
+
+          EmailJS is a third-party service and outages are outside your control. You may want to:
+          - Add a note to the contact form ("Email delivery may be delayed") during an extended outage.
+          - Consider a backup contact method (e.g., display your email address directly) if the outage lasts more than 24 hours.
+
+          ---
+          *This issue was opened automatically by the [Site Monitor workflow](https://github.com/${{ github.repository }}/actions/workflows/site-monitor.yml).*
+          EOF
+          )
+
+            gh issue create \
+              --repo "${{ github.repository }}" \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --label "$LABEL_NAME"
+
+          else
+            if [ -n "$OPEN_ISSUE" ]; then
+              gh issue comment "$OPEN_ISSUE" \
+                --repo "${{ github.repository }}" \
+                --body "EmailJS API is reachable again (HTTP $EMAILJS_CODE as of $(date -u '+%Y-%m-%d %H:%M UTC')). Closing this issue automatically."
+              gh issue close "$OPEN_ISSUE" \
+                --repo "${{ github.repository }}"
+              echo "Closed EmailJS issue #$OPEN_ISSUE"
+            else
+              echo "EmailJS check passed (HTTP $EMAILJS_CODE) — no open issue to close"
+            fi
+          fi
+
+      # -----------------------------------------------------------------------
+      # Summary — print a human-readable summary to the Actions log
+      # -----------------------------------------------------------------------
+      - name: Print check summary
+        run: |
+          echo "============================================"
+          echo "  Site Monitor Results — $(date -u '+%Y-%m-%d %H:%M UTC')"
+          echo "============================================"
+          echo "  HTTP status : ${{ steps.http.outputs.status }} (code: ${{ steps.http.outputs.http_code }})"
+          echo "  SSL cert    : ${{ steps.ssl.outputs.status }} (${{ steps.ssl.outputs.days_remaining }} days remaining, expires: ${{ steps.ssl.outputs.expiry_date }})"
+          echo "  EmailJS     : ${{ steps.emailjs.outputs.status }} (code: ${{ steps.emailjs.outputs.http_code }})"
+          echo "============================================"

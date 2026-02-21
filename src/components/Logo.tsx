@@ -30,7 +30,7 @@ const Logo: React.FC = () => {
         strokeWidth="2"
         strokeLinecap="round"
       />
-      
+
       {/* Thin circular border */}
       <circle
         cx="18"
