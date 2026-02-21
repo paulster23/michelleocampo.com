@@ -12,7 +12,7 @@ permissions:
 env:
   SITE_URL: https://michelleocampo.com
   LABEL_NAME: monitoring
-  NOTIFY_EMAIL: paulster23@gmail.com
+  NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
 
 jobs:
   test-form:
