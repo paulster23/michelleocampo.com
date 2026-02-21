@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        heading: ['Cormorant Garamond', 'serif'],
+        heading: ['avano-contrast', 'sans-serif'],
         sans: ['avano-contrast', 'sans-serif'],
       },
       colors: {
@@ -12,7 +12,7 @@ export default {
         'warm-white': '#F5F3F0',
         'warm-gray': '#5C5C5C',
         'charcoal': '#1C1C1C',
-        'primary': '#5C2E2E',
+        'primary': '#2C3E50',
         'gold': '#C49A6C',
       },
       fontSize: {
