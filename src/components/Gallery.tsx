@@ -95,33 +95,35 @@ const Gallery = () => {
           <p className="text-warm-gray max-w-2xl mx-auto">A glimpse into the beautiful moments I've had the privilege to capture.</p>
         </div>
 
-        {/* Gallery Tabs */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex space-x-8" role="group">
-            <button
-              type="button"
-              className={`px-2 py-1 text-sm ${
-                activeTab === 'weddings'
-                  ? 'font-bold border-b-2 border-primary text-charcoal'
-                  : 'font-medium text-warm-gray hover:text-charcoal'
-              } focus:outline-none transition-colors`}
-              onClick={() => setActiveTab('weddings')}
-            >
-              Weddings
-            </button>
-            <button
-              type="button"
-              className={`px-2 py-1 text-sm ${
-                activeTab === 'events'
-                  ? 'font-bold border-b-2 border-primary text-charcoal'
-                  : 'font-medium text-warm-gray hover:text-charcoal'
-              } focus:outline-none transition-colors`}
-              onClick={() => setActiveTab('events')}
-            >
-              Events
-            </button>
+        {/* Gallery Tabs — Events tab hidden until events portfolio is ready */}
+        {false && (
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex space-x-8" role="group">
+              <button
+                type="button"
+                className={`px-2 py-1 text-sm ${
+                  activeTab === 'weddings'
+                    ? 'font-bold border-b-2 border-primary text-charcoal'
+                    : 'font-medium text-warm-gray hover:text-charcoal'
+                } focus:outline-none transition-colors`}
+                onClick={() => setActiveTab('weddings')}
+              >
+                Weddings
+              </button>
+              <button
+                type="button"
+                className={`px-2 py-1 text-sm ${
+                  activeTab === 'events'
+                    ? 'font-bold border-b-2 border-primary text-charcoal'
+                    : 'font-medium text-warm-gray hover:text-charcoal'
+                } focus:outline-none transition-colors`}
+                onClick={() => setActiveTab('events')}
+              >
+                Events
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Gallery Grid */}
         <div className="gallery-grid">
