@@ -12,7 +12,6 @@ permissions:
 
 env:
   SITE_URL: https://michelleocampo.com
-  EMAILJS_URL: https://api.emailjs.com/api/v1.0/email/send
   SSL_WARN_DAYS: 14
   SSL_FAIL_DAYS: 3
   LABEL_NAME: monitoring
@@ -90,28 +89,6 @@ jobs:
             echo "status=fail" >> "$GITHUB_OUTPUT"
           elif [ "$DAYS_REMAINING" -lt "$SSL_WARN_DAYS" ]; then
             echo "status=warn" >> "$GITHUB_OUTPUT"
-          else
-            echo "status=ok" >> "$GITHUB_OUTPUT"
-          fi
-
-      # -----------------------------------------------------------------------
-      # CHECK 3 — EmailJS API reachability
-      # -----------------------------------------------------------------------
-      - name: Check EmailJS reachability
-        id: emailjs
-        run: |
-          # A HEAD request to the send endpoint: any HTTP response (even 4xx)
-          # means the service is up. A network failure (curl exit code != 0
-          # or HTTP 000) means it is unreachable.
-          EMAILJS_CODE=$(curl -sSo /dev/null -w "%{http_code}" \
-            --max-time 15 \
-            --retry 2 \
-            --retry-delay 5 \
-            -X HEAD \
-            "$EMAILJS_URL" || echo "000")
-          echo "http_code=$EMAILJS_CODE" >> "$GITHUB_OUTPUT"
-          if [ "$EMAILJS_CODE" = "000" ]; then
-            echo "status=fail" >> "$GITHUB_OUTPUT"
           else
             echo "status=ok" >> "$GITHUB_OUTPUT"
           fi
@@ -297,86 +274,6 @@ jobs:
             fi
           fi
 
-      - name: Handle EmailJS check result
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          EMAILJS_STATUS: ${{ steps.emailjs.outputs.status }}
-          EMAILJS_CODE: ${{ steps.emailjs.outputs.http_code }}
-        run: |
-          TITLE_PREFIX="[Monitor] EmailJS unreachable"
-
-          OPEN_ISSUE=$(gh issue list \
-            --repo "${{ github.repository }}" \
-            --label "$LABEL_NAME" \
-            --state open \
-            --json number,title \
-            --jq ".[] | select(.title | startswith(\"$TITLE_PREFIX\")) | .number" \
-            | head -1)
-
-          if [ "$EMAILJS_STATUS" = "fail" ]; then
-            TITLE="$TITLE_PREFIX — no response from api.emailjs.com"
-
-            if [ -n "$OPEN_ISSUE" ]; then
-              echo "EmailJS issue #$OPEN_ISSUE already open — skipping duplicate"
-              exit 0
-            fi
-
-            BODY=$(cat <<EOF
-          ## EmailJS API is not reachable
-
-          | Detail | Value |
-          |--------|-------|
-          | **Endpoint checked** | \`$EMAILJS_URL\` |
-          | **HTTP status returned** | \`$EMAILJS_CODE\` (\`000\` = no response / network error) |
-          | **Checked at** | $(date -u '+%Y-%m-%d %H:%M UTC') |
-
-          ## What this means
-
-          The monitor could not reach the EmailJS API endpoint at all. This means the contact form on the site **will not be able to send emails** until this is resolved.
-
-          Note: this check only verifies that the EmailJS service is reachable over the network. It does **not** verify that your specific service ID or template ID is correctly configured — those would produce a 4xx HTTP error, which would count as "reachable".
-
-          ## Troubleshooting checklist
-
-          - [ ] Visit [emailjs.com](https://www.emailjs.com) and attempt to log in — if the site is down, this is a service outage.
-          - [ ] Check the EmailJS status page or their [Twitter/X account](https://twitter.com/emailjs) for any announced incidents.
-          - [ ] Try \`curl -I https://api.emailjs.com/api/v1.0/email/send\` from your local machine to confirm whether the issue is network-wide or isolated to GitHub Actions.
-          - [ ] If EmailJS is up but the contact form stopped working separately, verify the credentials in the site source:
-            - Service ID: \`service_dizvkpg\`
-            - Template ID: \`template_zbmk72p\`
-            - These can be confirmed under **Email Services** and **Email Templates** in the [EmailJS dashboard](https://dashboard.emailjs.com).
-          - [ ] Check that your EmailJS account has not exceeded its free-tier monthly email limit (200 emails/month on the free plan).
-
-          ## If this is a persistent EmailJS outage
-
-          EmailJS is a third-party service and outages are outside your control. You may want to:
-          - Add a note to the contact form ("Email delivery may be delayed") during an extended outage.
-          - Consider a backup contact method (e.g., display your email address directly) if the outage lasts more than 24 hours.
-
-          ---
-          *This issue was opened automatically by the [Site Monitor workflow](https://github.com/${{ github.repository }}/actions/workflows/site-monitor.yml).*
-          EOF
-          )
-
-            gh issue create \
-              --repo "${{ github.repository }}" \
-              --title "$TITLE" \
-              --body "$BODY" \
-              --label "$LABEL_NAME"
-
-          else
-            if [ -n "$OPEN_ISSUE" ]; then
-              gh issue comment "$OPEN_ISSUE" \
-                --repo "${{ github.repository }}" \
-                --body "EmailJS API is reachable again (HTTP $EMAILJS_CODE as of $(date -u '+%Y-%m-%d %H:%M UTC')). Closing this issue automatically."
-              gh issue close "$OPEN_ISSUE" \
-                --repo "${{ github.repository }}"
-              echo "Closed EmailJS issue #$OPEN_ISSUE"
-            else
-              echo "EmailJS check passed (HTTP $EMAILJS_CODE) — no open issue to close"
-            fi
-          fi
-
       # -----------------------------------------------------------------------
       # Summary — print a human-readable summary to the Actions log
       # -----------------------------------------------------------------------
@@ -387,5 +284,4 @@ jobs:
           echo "============================================"
           echo "  HTTP status : ${{ steps.http.outputs.status }} (code: ${{ steps.http.outputs.http_code }})"
           echo "  SSL cert    : ${{ steps.ssl.outputs.status }} (${{ steps.ssl.outputs.days_remaining }} days remaining, expires: ${{ steps.ssl.outputs.expiry_date }})"
-          echo "  EmailJS     : ${{ steps.emailjs.outputs.status }} (code: ${{ steps.emailjs.outputs.http_code }})"
           echo "============================================"

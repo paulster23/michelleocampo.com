@@ -1,18 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, MapPin, Calendar } from 'lucide-react';
-import emailjs from 'emailjs-com';
 
 const Contact = () => {
-  // EmailJS configuration
-  const serviceID = 'service_dizvkpg';
-  const templateID = 'template_zbmk72p';
-  const userID = 'q2ycnHxxDT4dVYj-W';
-  
-  // Initialize EmailJS
-  useEffect(() => {
-    emailjs.init(userID);
-  }, [userID]);
-
   // State for form data and messages
   const [formData, setFormData] = useState({
     name: '',
@@ -42,25 +31,26 @@ const Contact = () => {
     }
   }, [successMessage, errorMessage]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    emailjs
-      .send(serviceID, templateID, formData)
-      .then(() => {
-        setSuccessMessage('Email sent successfully! Thank you for your inquiry. I will get back to you soon.');
-        setFormData({
-          name: '',
-          email: '',
-          date: '',
-          location: '',
-          message: ''
-        });
-      })
-      .catch(error => {
-        console.error('Error sending email:', error);
-        setErrorMessage('There was an error sending your message. Please try again later.');
+    try {
+      const response = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          'form-name': 'contact',
+          ...formData,
+        }).toString(),
       });
+      if (response.ok) {
+        setSuccessMessage("Thank you! I'll be in touch within 24 hours.");
+        setFormData({ name: '', email: '', date: '', location: '', message: '' });
+      } else {
+        setErrorMessage('Something went wrong. Please try again or email me directly.');
+      }
+    } catch {
+      setErrorMessage('Something went wrong. Please try again or email me directly.');
+    }
   };
 
   return (
@@ -70,7 +60,7 @@ const Contact = () => {
         <h2 className="text-3xl font-light mb-4">Get in Touch</h2>
         <p className="text-warm-gray max-w-2xl mx-auto">I'd love to hear about your wedding plans and how I can help capture your special day.</p>
       </div>
-      
+
       <div className="flex flex-col md:flex-row">
         <div className="md:w-1/3 mb-8 md:mb-0">
           <div className="mb-8">
@@ -80,7 +70,7 @@ const Contact = () => {
             </div>
             <p className="text-warm-gray"><a href="mailto:michelle@michelleocampo.com">michelle@michelleocampo.com</a></p>
           </div>
-          
+
           <div className="mb-8">
             <div className="flex items-center mb-2">
               <MapPin className="h-5 w-5 mr-2 text-gray-400" />
@@ -90,7 +80,7 @@ const Contact = () => {
             <p className="text-warm-gray">Available for travel worldwide</p>
           </div>
         </div>
-        
+
         <div className="md:w-2/3 md:pl-8">
           {successMessage && (
             <div className="mb-4 p-3 bg-cream text-primary border border-primary/20">
@@ -102,7 +92,14 @@ const Contact = () => {
               {errorMessage}
             </div>
           )}
-          <form onSubmit={handleSubmit} className="bg-warm-white p-8 shadow-sm">
+          <form
+            name="contact"
+            data-netlify="true"
+            onSubmit={handleSubmit}
+            className="bg-warm-white p-8 shadow-sm"
+          >
+            <input type="hidden" name="form-name" value="contact" />
+            <p hidden><input name="bot-field" /></p>
             <p className="text-xs text-warm-gray tracking-widest uppercase mb-8">Let's discuss your vision — I respond within 24 hours.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
@@ -117,7 +114,7 @@ const Contact = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="email" className="block text-sm text-warm-gray mb-2">Email Address</label>
                 <input
@@ -131,7 +128,7 @@ const Contact = () => {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label htmlFor="date" className="block text-sm text-warm-gray mb-2">Wedding Date</label>
@@ -147,7 +144,7 @@ const Contact = () => {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label htmlFor="location" className="block text-sm text-warm-gray mb-2">Wedding Location</label>
                 <div className="relative">
@@ -163,7 +160,7 @@ const Contact = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="mb-6">
               <label htmlFor="message" className="block text-sm text-warm-gray mb-2">Tell me about your wedding</label>
               <textarea
@@ -176,7 +173,7 @@ const Contact = () => {
                 required
               ></textarea>
             </div>
-            
+
             <button
               type="submit"
               className="w-full bg-primary text-cream py-4 px-8 font-sans text-sm tracking-widest uppercase hover:bg-primary/80 transition-colors duration-300"

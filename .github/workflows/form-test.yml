@@ -1,0 +1,135 @@
+name: Weekly Form Test
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9am UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+env:
+  SITE_URL: https://michelleocampo.com
+  LABEL_NAME: monitoring
+  NOTIFY_EMAIL: paulster23@gmail.com
+
+jobs:
+  test-form:
+    name: Submit test contact form
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ensure monitoring label exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create "$LABEL_NAME" \
+            --description "Automated monitoring alerts" \
+            --color "d93f0b" \
+            --repo "${{ github.repository }}" 2>/dev/null || true
+
+      - name: Submit test form submission
+        id: form_test
+        run: |
+          HTTP_CODE=$(curl -sSo /dev/null -w "%{http_code}" \
+            --max-time 15 \
+            --retry 2 \
+            --retry-delay 5 \
+            -X POST "$SITE_URL" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "form-name=contact" \
+            --data-urlencode "name=Weekly Monitor Test" \
+            --data-urlencode "email=$NOTIFY_EMAIL" \
+            --data-urlencode "date=" \
+            --data-urlencode "location=" \
+            --data-urlencode "message=Automated weekly test from site monitor — $(date -u '+%Y-%m-%d %H:%M UTC'). If you received this email the contact form is working correctly." \
+            || echo "000")
+
+          echo "http_code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "status=ok" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Handle form test result
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORM_STATUS: ${{ steps.form_test.outputs.status }}
+          FORM_CODE: ${{ steps.form_test.outputs.http_code }}
+        run: |
+          TITLE_PREFIX="[Monitor] Contact form"
+
+          OPEN_ISSUE=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --label "$LABEL_NAME" \
+            --state open \
+            --json number,title \
+            --jq ".[] | select(.title | startswith(\"$TITLE_PREFIX\")) | .number" \
+            | head -1)
+
+          if [ "$FORM_STATUS" = "fail" ]; then
+            TITLE="$TITLE_PREFIX not responding — HTTP $FORM_CODE"
+
+            if [ -n "$OPEN_ISSUE" ]; then
+              echo "Form issue #$OPEN_ISSUE already open — skipping duplicate"
+              exit 0
+            fi
+
+            BODY=$(cat <<EOF
+          ## Contact form is not accepting submissions
+
+          | Detail | Value |
+          |--------|-------|
+          | **URL posted to** | $SITE_URL |
+          | **Form name** | contact |
+          | **HTTP response** | \`$FORM_CODE\` (\`000\` = no network response) |
+          | **Checked at** | $(date -u '+%Y-%m-%d %H:%M UTC') |
+
+          ## What this means
+
+          A test POST to the Netlify contact form returned an unexpected response.
+          The contact form on the site **may not be delivering inquiry emails**.
+
+          ## Troubleshooting checklist
+
+          - [ ] Open the [Netlify dashboard](https://app.netlify.com) → select the site → go to **Forms**.
+          - [ ] Confirm the \`contact\` form appears in the forms list. If not, the form was not detected at build time — check that the hidden form is present in \`index.html\`.
+          - [ ] Check **Form notifications** are configured: Site configuration → Forms → Form notifications → add email \`$NOTIFY_EMAIL\`.
+          - [ ] Check the form's submission list for any recent entries. If entries appear but no email arrived, the notification email setting is the issue.
+          - [ ] If HTTP \`$FORM_CODE\` is \`000\` or \`5xx\`, the site itself may be down — check the site uptime issue if one is open.
+          - [ ] Redeploy the site from the Netlify dashboard to force Netlify to re-scan for forms.
+
+          ---
+          *Opened automatically by the [Weekly Form Test workflow](https://github.com/${{ github.repository }}/actions/workflows/form-test.yml).*
+          EOF
+            )
+
+            gh issue create \
+              --repo "${{ github.repository }}" \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --label "$LABEL_NAME"
+
+          else
+            if [ -n "$OPEN_ISSUE" ]; then
+              gh issue comment "$OPEN_ISSUE" \
+                --repo "${{ github.repository }}" \
+                --body "Contact form is responding again (HTTP $FORM_CODE as of $(date -u '+%Y-%m-%d %H:%M UTC')). A test submission was sent — verify that a notification email arrived at \`$NOTIFY_EMAIL\`. Closing this issue."
+              gh issue close "$OPEN_ISSUE" \
+                --repo "${{ github.repository }}"
+              echo "Closed form issue #$OPEN_ISSUE"
+            else
+              echo "Form test passed (HTTP $FORM_CODE). Test submission sent — check $NOTIFY_EMAIL for the Netlify notification."
+            fi
+          fi
+
+      - name: Print summary
+        run: |
+          echo "============================================"
+          echo "  Form Test — $(date -u '+%Y-%m-%d %H:%M UTC')"
+          echo "  Status : ${{ steps.form_test.outputs.status }}"
+          echo "  HTTP   : ${{ steps.form_test.outputs.http_code }}"
+          echo "============================================"
