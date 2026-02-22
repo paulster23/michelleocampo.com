@@ -43,7 +43,7 @@ const Contact = () => {
         }).toString(),
       });
       if (response.ok) {
-        setSuccessMessage("Thank you! I'll be in touch within 24 hours.");
+        setSuccessMessage("Thanks for getting in touch! Expect to hear from me soon.");
         setFormData({ name: '', email: '', date: '', location: '', message: '' });
       } else {
         setErrorMessage('Something went wrong. Please try again or email me directly.');
@@ -100,7 +100,6 @@ const Contact = () => {
           >
             <input type="hidden" name="form-name" value="contact" />
             <p hidden><input name="bot-field" /></p>
-            <p className="text-xs text-warm-gray tracking-widest uppercase mb-8">Let's discuss your vision — I respond within 24 hours.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label htmlFor="name" className="block text-sm text-warm-gray mb-2">Your Name</label>
